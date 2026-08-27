@@ -58,7 +58,7 @@ files in one folder, you get 5 separate runs, each with its own results.
    DeepVariant — just slower to start, since that adds a step.
 
    This same folder also needs a
-   [`job_settings.yaml`](docker/job_settings.example.yaml) file (next step).
+   [`job_settings.yaml`](job_settings.example.yaml) file (next step).
 
 4. **Upload a `job_settings.yaml`** to the same folder. It tells the
    pipeline where the reference genome is and any DeepVariant options.
