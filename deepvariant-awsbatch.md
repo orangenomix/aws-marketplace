@@ -1,5 +1,6 @@
 <img src="orange_header.png" width="50%" align="left">
 </br>
+
 # DeepVariant Pipeline — User Guide
 
 This covers launching the pipeline via CloudFormation and then submitting
