@@ -1,0 +1,139 @@
+# job_settings.yaml
+#
+# Configuration for a single DeepVariant Batch job. Drop this file (named
+# exactly "job_settings.yaml" or "job_settings.yml"), your read file(s), and
+# optionally their index, into an S3 input folder:
+#
+#   s3://<bucket>/<folder>/job_settings.yaml
+#   s3://<bucket>/<folder>/sample.bam
+#   s3://<bucket>/<folder>/sample.bam.bai        (optional -- auto-generated if missing)
+#
+# Reads are discovered by scanning this folder for .bam/.cram files -- they
+# are NOT listed in this file. Each .bam/.cram directly under the folder
+# (not in a subfolder) gets its own Batch job and its own DeepVariant run --
+# the trigger Lambda fans out one job per file it finds here, so a folder
+# with multiple reads files is treated as multiple independent samples, not
+# multiple lanes of one sample. If you do have multiple lanes/flow cells of
+# the SAME sample, merge them into a single BAM/CRAM before uploading (e.g.
+# `samtools merge`) -- there is no "combine these files" option.
+#
+# This job_settings.yaml is shared across every file fanned out from this
+# folder (same reference, same DeepVariant flags for all of them). Each
+# file's index is auto-paired if present as either sample.bam.bai or
+# sample.bai (same for .cram/.crai), and auto-generated with `samtools
+# index` if neither is found.
+#
+# ...then create an empty "_READY" object in that same folder to trigger the
+# job:
+#
+#   aws s3api put-object --bucket <bucket> --key <folder>/_READY --body /dev/null
+#
+# Results are written to s3://<bucket>/<folder>_output/ (see `output.uri`
+# below to override that).
+#
+# Any field with a null/empty value below is optional and can be omitted
+# entirely -- it's spelled out here only so this file documents every
+# setting run_deepvariant accepts. See
+# https://github.com/google/deepvariant/blob/r1.10/docs/deepvariant-quick-start.md
+# and `run_deepvariant --helpfull` (inside the image) for the authoritative
+# flag docs.
+#
+# Path convention used throughout this file: any "uri"/path value is either
+# a bare filename (resolved relative to this same input folder) or a full
+# s3://bucket/key URI (e.g. pointing at a shared, reused-across-jobs
+# reference bucket instead of duplicating a multi-GB fasta per job).
+
+# -----------------------------------------------------------------------------
+# Reference genome (required)
+# -----------------------------------------------------------------------------
+reference:
+  # Required.
+  fasta: s3://my-refs-bucket/GRCh38/GRCh38_no_alt_analysis_set.fasta
+  # Optional. FASTA index (.fai). If omitted, the container looks for
+  # <fasta>.fai next to the fasta itself; if that's not found either, it's
+  # generated with `samtools faidx`.
+  fai: null
+  # Optional. Sequence dictionary (.dict). Auto-generated with
+  # `samtools dict` if omitted or not found.
+  dict: null
+
+# -----------------------------------------------------------------------------
+# Reads -- NOT configured here. Each job processes exactly one .bam/.cram
+# file (see the header comment above). There is no `reads:` key.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Output (required: at least the folder, whether set here or defaulted)
+# -----------------------------------------------------------------------------
+output:
+  # Optional. s3:// URI of the folder results are written to. If omitted,
+  # defaults to the OUTPUT_S3_URI the Lambda trigger computes
+  # (<input-folder>_output/).
+  uri: null
+  # Filename for the called-variants VCF, written under output.uri.
+  vcf_filename: output.vcf.gz
+  # Optional. Set to enable gVCF output (--output_gvcf), e.g. output.g.vcf.gz.
+  gvcf_filename: null
+  # Upload the --intermediate_results_dir contents too (make_examples
+  # tfrecords, call_variants outputs). Large -- off by default.
+  keep_intermediate_results: false
+  # Upload run_deepvariant's --logging_dir and captured stdout/stderr.
+  keep_logs: true
+
+# -----------------------------------------------------------------------------
+# DeepVariant (run_deepvariant) flags
+# -----------------------------------------------------------------------------
+deepvariant:
+  # Required. WGS | WES | PACBIO | ONT_R104 | HYBRID_PACBIO_ILLUMINA | MASSEQ | RNASEQ
+  model_type: WGS
+  # Optional. Defaults to the BAM/CRAM's SM tag if unset.
+  sample_name: null
+  # Optional. A region string (e.g. "chr20", "chr1:1000-2000") or a BED
+  # file -- bare filename (resolved relative to this folder) or full
+  # s3:// URI.
+  regions: null
+  # Optional. Defaults to all vCPUs available on the Batch instance.
+  num_shards: null
+  # Optional. e.g. "chrX,chrY" -- contigs to call as haploid (non-PAR).
+  haploid_contigs: null
+  # Optional. BED of pseudoautosomal regions, used with haploid_contigs.
+  par_regions_bed: null
+  # Optional (bool). Use haplotype-tagged (HP) information; relevant for
+  # phased long-read models.
+  use_hp_information: null
+  # Optional (bool). Phase the output VCF.
+  phase_vcf: null
+  # Optional (bool). Disable the small-model shortcut path.
+  disable_small_model: false
+  # Optional. Path/URI to a customized model checkpoint.
+  customized_model: null
+  # Optional. Path/URI to a customized model JSON config.
+  customized_model_json: null
+  # Optional. Path/URI to a customized "small model".
+  customized_small_model: null
+  # Optional. CPU count for the postprocess_variants stage specifically
+  # (defaults to num_shards).
+  postprocess_cpus: null
+  # Emit the VCF stats HTML/JSON report (visual_report.html etc).
+  vcf_stats_report: true
+  # Optional. Title used in the VCF stats report.
+  report_title: null
+  # Optional. List of GQ thresholds for small-model VCF emission.
+  emit_vcf_by_small_model_gq_values: null
+  # Optional (bool). Validate the run without actually executing it.
+  dry_run: false
+  # Optional (bool). Emit a runtime report.
+  runtime_report: false
+  # Optional. Raw string passed through verbatim to make_examples, e.g.
+  # "keep_legacy_allele_counter_behavior=true".
+  make_examples_extra_args: null
+  # Optional. Raw string passed through verbatim to call_variants.
+  call_variants_extra_args: null
+  # Optional. Raw string passed through verbatim to postprocess_variants.
+  postprocess_variants_extra_args: null
+
+# -----------------------------------------------------------------------------
+# Runtime / misc
+# -----------------------------------------------------------------------------
+runtime:
+  log_level: INFO
