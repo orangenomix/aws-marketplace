@@ -1,3 +1,9 @@
+<img src="orange_header.png" width="30%" align="left">
+<br clear="left">
+<hr style="border: none; border-top: 3px solid orange;">
+</br>
+</br>
+
 # VEP Annotation Pipeline — User Guide
 
 This covers launching the pipeline via CloudFormation and then submitting
