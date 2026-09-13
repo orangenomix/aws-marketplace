@@ -4,6 +4,7 @@
 </br>
 </br>
 
+
 # VEP Annotation Pipeline — User Guide
 
 This covers launching the pipeline via CloudFormation and then submitting
@@ -72,8 +73,8 @@ annotated outputs; drop 21 and the 21st spills into a second job.
    `NoCall` sites, for example) just spends compute annotating sites with
    no biological meaning.
 
-   This same folder also needs a
-   [`job_settings.yaml`](docker/job_settings.example.yaml) file (next step).
+   This same folder also needs a configuration file. For a template check: 
+   [`job_settings.example.yaml`](./job_settings.example.yaml) file (next step).
 
 4. **Upload a `job_settings.yaml`** to the same folder. It tells the
    pipeline which VEP cache to use and any VEP options. A template with
@@ -144,3 +145,6 @@ aws s3api put-object --bucket $BUCKET --key run2026-08-26/_READY --body /dev/nul
 aws s3 ls s3://$BUCKET/run2026-08-26_output/sample_a/
 aws s3 ls s3://$BUCKET/run2026-08-26_output/sample_b/
 ```
+
+## Getting Help
+[info@orangenomix.com](mailto:info@orangenomix.com)

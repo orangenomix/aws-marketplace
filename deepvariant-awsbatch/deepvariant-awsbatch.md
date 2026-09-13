@@ -63,8 +63,8 @@ files in one folder, you get 5 separate runs, each with its own results.
    If you skip this, the pipeline generates the index itself before running
    DeepVariant — just slower to start, since that adds a step.
 
-   This same folder also needs a
-   [`job_settings.yaml`](job_settings.example.yaml) file (next step).
+   This same folder also needs a configuration file. For a template check: 
+   [`job_settings.example.yaml`](./job_settings.example.yaml) file (next step).
 
 4. **Upload a `job_settings.yaml`** to the same folder. It tells the
    pipeline where the reference genome is and any DeepVariant options.
@@ -127,3 +127,7 @@ aws s3api put-object --bucket $BUCKET --key run2026-08-26/_READY --body /dev/nul
 aws s3 ls s3://$BUCKET/run2026-08-26_output/patient_001/
 aws s3 ls s3://$BUCKET/run2026-08-26_output/patient_002/
 ```
+
+
+## Getting Help
+[info@orangenomix.com](mailto:info@orangenomix.com)
