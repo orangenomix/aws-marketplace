@@ -1,3 +1,5 @@
+[](orange_header.png)
+
 # DeepVariant Pipeline — User Guide
 
 This covers launching the pipeline via CloudFormation and then submitting
