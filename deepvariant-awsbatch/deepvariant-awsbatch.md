@@ -1,4 +1,4 @@
-<img src="orange_header.png" width="30%" align="left">
+<img src="../orange_header.png" width="30%" align="left">
 <br clear="left">
 <hr style="border: none; border-top: 3px solid orange;">
 </br>
