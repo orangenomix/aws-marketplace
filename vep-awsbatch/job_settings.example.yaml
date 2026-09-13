@@ -1,0 +1,77 @@
+# job_settings.yaml
+#
+# Configuration for a batch of VEP annotation Batch jobs. Drop this file
+# (named exactly "job_settings.yaml" or "job_settings.yml") into an S3 input
+# folder together with your VCF files:
+#
+#   s3://<bucket>/<folder>/job_settings.yaml
+#   s3://<bucket>/<folder>/sample_a.vcf.gz
+#   s3://<bucket>/<folder>/sample_b.vcf.gz
+#   s3://<bucket>/<folder>/sample_c.vcf.gz
+#
+# VCFs are discovered by scanning this folder for .vcf/.vcf.gz files -- they
+# are NOT listed in this file. Unlike the DeepVariant pipeline, files are NOT
+# one-job-per-file here: the trigger Lambda groups every .vcf/.vcf.gz file
+# directly under the folder into batches of `FilesPerJob` files (a
+# CloudFormation stack parameter, not set here) and submits one Batch job
+# per batch. Each job processes its batch chromosome-major: for chromosome
+# i, it pulls only that chromosome's VEP cache slice, annotates chromosome
+# i's records across every file in its batch in a single VEP invocation,
+# then moves on to i+1 (prefetched in the background). This is what lets a
+# modest instance handle a batch without ever holding the whole genome's
+# cache (~26GB compressed) on disk at once.
+#
+# This job_settings.yaml is shared across every file in every batch fanned
+# out from this folder (same species/assembly/cache version, same VEP flags
+# for all of them).
+#
+# ...then create an empty "_READY" object in that same folder to trigger
+# processing:
+#
+#   aws s3api put-object --bucket <bucket> --key <folder>/_READY --body /dev/null
+#
+# Results are written to s3://<bucket>/<folder>_output/<file-basename>/ --
+# one subfolder per input file, same convention as the DeepVariant pipeline,
+# regardless of how many files shared its batch job.
+#
+# Path convention used throughout this file: any "uri"/path value is either
+# a bare filename (resolved relative to this same input folder) or a full
+# s3://bucket/key URI.
+
+# -----------------------------------------------------------------------------
+# VEP cache (required) -- identifies which slice of the vendor's public cache
+# bucket (fixed at deploy time, not editable here -- see cdk/README.md's
+# vep_cache_s3_uri context value) this job should pull from.
+# -----------------------------------------------------------------------------
+cache:
+  # Required. Must match a "<species>" directory under the vendor's cache
+  # bucket, e.g. homo_sapiens.
+  species: homo_sapiens
+  # Required. e.g. GRCh38.
+  assembly: GRCh38
+  # Required. e.g. 116 -- must match a "<cache_version>_<assembly>"
+  # directory under the vendor's cache bucket, e.g. 116_GRCh38.
+  cache_version: 116
+
+# -----------------------------------------------------------------------------
+# VEP flags
+# -----------------------------------------------------------------------------
+vep:
+  # Optional. s3:// URI or filename (resolved relative to this folder) of a
+  # reference FASTA. Only needed for flags that require sequence lookups
+  # (e.g. HGVS notation via --hgvs in extra_args). Omit if you don't need
+  # those.
+  fasta: null
+  # Optional. Number of VEP fork workers per chromosome's VEP invocation.
+  # Defaults to all vCPUs available on the Batch instance.
+  fork: null
+  # Optional. Raw string of additional flags passed through verbatim to vep,
+  # e.g. "--hgvs --symbol --canonical --plugin CADD,/path/to/cadd.txt.gz".
+  # See `vep --help` (inside the image) for the full flag reference.
+  extra_args: null
+
+# -----------------------------------------------------------------------------
+# Runtime / misc
+# -----------------------------------------------------------------------------
+runtime:
+  log_level: INFO
