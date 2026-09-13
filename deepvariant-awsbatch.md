@@ -1,4 +1,4 @@
-![](orange_header.png)
+<img src="orange_header.png" width="50%" align="left">
 
 # DeepVariant Pipeline — User Guide
 
