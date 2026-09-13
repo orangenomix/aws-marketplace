@@ -1,4 +1,5 @@
-<img src="orange_header.png" width="50%" align="left">
+<img src="orange_header.png" width="30%" align="left">
+<br clear="left">
 </br>
 </br>
 
